@@ -12,6 +12,9 @@
 #include "util/tc_base64.h"
 #include <atomic>
 
+#include "websocket/websocket_adpt.h"
+#include "WSUser/WSUser.h"
+
 //////////////////////////////////////////////////////
 using namespace std;
 using namespace tup;
@@ -42,10 +45,66 @@ void ProxyImp::destroy()
     destroyBase();
 }
 
-//////////////////////////////////////////////////////
+int ProxyImp::doClose(CurrentPtr current)
+{
+    if(WSUserMgr::isWS(current->getUId()))
+    {
+        TLOG_DEBUG("close ws socket:" << current->getUId() << endl);
+    }
+    return 0;
+}
 
 int ProxyImp::doRequest(tars::TarsCurrentPtr current, vector<char> &response)
 {
+    if(WSUserMgr::isWS(current->getUId()))
+    {
+        return wsRequest(current, response);
+    }else
+    {
+        return tarsRequest(current, response);
+    }
+}
+
+int ProxyImp::wsRequest(tars::TarsCurrentPtr current, vector<char>& response)
+{
+    HandleParam stParam;
+    string sErrMsg;
+
+    ReportHelper::reportProperty("WebSocketTotalReqNum");
+    const vector<char> &request = current->getRequestBuffer();
+
+    stParam.current = current;
+    stParam.buffer = &request[0];
+    stParam.length = request.size();
+    stParam.iEptType = 0;
+    stParam.iZipType = 0;
+
+    stParam.httpKeepAlive = true;
+
+    //todo 从ws user拿
+    //stParam.sIP = current->getIp();
+
+    stParam.proxyType = EPT_TUP_PROXY;
+
+    current->setResponse(false);
+
+    // return handleTarsRequest(stParam);
+
+    vector<char> s = request;
+    s.push_back(':');
+    s.push_back('o');
+    s.push_back('k');
+    s.push_back(0);
+    buildWSFrame(s, response);
+    current->sendResponse(&response[0], response.size());
+    TLOG_DEBUG("ws user data id:" << current->getUId() << " data:" << std::string(&request[0], request.size())
+    << " size: " << request.size() << endl);
+    return 0;
+}
+
+int ProxyImp::tarsRequest(tars::TarsCurrentPtr current, vector<char> &response)
+{
+
     HandleParam stParam;
     string sErrMsg;
 
@@ -66,6 +125,18 @@ int ProxyImp::doRequest(tars::TarsCurrentPtr current, vector<char> &response)
 
         TLOGDEBUG("request header:\r\n"
                   << stParam.httpRequest.genHeader() << endl);
+
+        const auto& upgrade = stParam.httpRequest.getHeader("Upgrade");
+        if(upgrade == "websocket")
+        {
+            TC_HttpResponse response;
+            makeHandshakeRsp(stParam.httpRequest, response);
+            const string& buffer = response.encode();
+            stParam.current->sendResponse(buffer.c_str(), buffer.length());
+            TLOGERROR("get a websocket" << endl);
+            WSUserMgr::addUser(current->getUId());
+            return 0;
+        }
 
         string sRemoteIp; //= stParam.httpRequest.getHeader("X-Forwarded-For-Pound");
 

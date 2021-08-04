@@ -7,8 +7,9 @@ option(TARS_SSL "option for ssl" OFF)
 option(TARS_HTTP2 "option for http2" OFF)
 option(TARS_GPREF "option for gpref" OFF)
 
+
 if(WIN32)
-    include (c:\\tars\\cpp\\makefile\\tars-tools.cmake)
+    include (C:\\Users\\dev\\code\\github\\github.com\\TarsCloud\\TarsCpp\\servant\\makefile\\tars-tools.cmake)
 else()
     include (/usr/local/tars/cpp/makefile/tars-tools.cmake)
 endif()
@@ -16,12 +17,17 @@ endif()
 set(TARS_WEB_SERVER "root@172.16.8.227")
 set(TARS_WEB_HOST "172.16.8.227:3000")
 
+
 include_directories(/usr/local/tars/cpp/thirdparty/include)
+if(WIN32)
+    include_directories(C:\\Users\\dev\\code\\github\\github.com\\TarsCloud\\TarsCpp\\servant)
+    include_directories(C:\\Users\\dev\\code\\github\\github.com\\TarsCloud\\TarsCpp\\util\\include)
+endif()
 link_directories(/usr/local/tars/cpp/thirdparty/lib)
 link_directories(/lib/x86_64-linux-gnu)
 
 add_subdirectory(src)
-add_subdirectory(test)
+# add_subdirectory(test)
 
 set(WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 set(SOURCE_DIR ${CMAKE_SOURCE_DIR})

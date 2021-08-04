@@ -8,6 +8,8 @@
 #include "util/tc_http.h"
 #include "util/tc_network_buffer.h"
 //include "gperftools/profiler.h"
+#include "websocket/websocket_adpt.h"
+#include "WSUser/WSUser.h"
 
 using namespace std;
 
@@ -46,12 +48,27 @@ bool GatewayServer::loadComm(const string &command, const string &params, string
     return true;
 }
 
+TC_NetWorkBuffer::PACKET_TYPE gatewayParser(TC_NetWorkBuffer&in, vector<char> &out)
+{
+    auto c = (tars::TC_EpollServer::Connection*)in.getConnection();
+
+    if(WSUserMgr::isWS(c->getId()))
+    {
+        return parseWebSocket(in, out);
+    }
+    else
+    {
+        return tars::TC_NetWorkBuffer::parseHttp(in, out);
+    }
+}
+
+
 /////////////////////////////////////////////////////////////////
 void GatewayServer::initialize()
 {
     addServant<ProxyImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".ProxyObj");
     //addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".TupProxyObj", &TupProtocol::parseHttp);
-    addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".ProxyObj", &tars::TC_NetWorkBuffer::parseHttp);
+    addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".ProxyObj", &gatewayParser);
 
     addConfig(ServerConfig::ServerName + ".conf");
     TC_Config conf;
