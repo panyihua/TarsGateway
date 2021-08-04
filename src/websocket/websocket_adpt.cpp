@@ -64,6 +64,7 @@ TC_NetWorkBuffer::PACKET_TYPE parseWebSocket(TC_NetWorkBuffer&in, vector<char> &
 
         in.moveHeader(head);
         in.getHeader(body, out);
+        websocket_parser_decode(&out[0], &out[0], out.size(), &parser);
         in.moveHeader(body);
         TLOG_DEBUG("connectId:" << c->getId() << " parseWebSocket parser ok. head:" << head << " body:" << body << endl);
         return TC_NetWorkBuffer::PACKET_FULL;
