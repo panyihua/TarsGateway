@@ -6,6 +6,7 @@
 #define PROXY_SERVER_WSUSER_H
 
 #include <map>
+#include "websocket/websocket_adpt.h"
 
 //WebSocket user
 class WSUser

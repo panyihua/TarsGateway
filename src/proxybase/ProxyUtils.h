@@ -2,6 +2,7 @@
 #define _PROXYUTILS_H_
 
 #include "servant/Application.h"
+#include "WSUser/WSUser.h"
 
 using namespace tars;
 
@@ -78,11 +79,18 @@ public:
     static void doErrorRsp(int statusCode, tars::TarsCurrentPtr current, bool keepAlive = false)
     {
         string data = getHttpErrorRsp(statusCode);
-        current->sendResponse(data.c_str(), data.length());
-        if (!keepAlive)
+        if(WSUserMgr::isWS(current->getUId()))
         {
-            current->close();
+            wsSendResponse(current, data.c_str(), data.size());
+        } else
+        {
+            current->sendResponse(data.c_str(), data.length());
+            if (!keepAlive)
+            {
+                current->close();
+            }
         }
+
 
         TLOGDEBUG(statusCode << "|" << data << endl);
     }

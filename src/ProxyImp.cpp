@@ -88,18 +88,10 @@ int ProxyImp::wsRequest(tars::TarsCurrentPtr current, vector<char>& response)
 
     current->setResponse(false);
 
-    // return handleTarsRequest(stParam);
-
-    vector<char> s = request;
-    s.push_back(':');
-    s.push_back('o');
-    s.push_back('k');
-    s.push_back(0);
-    buildWSFrame(s, response);
-    current->sendResponse(&response[0], response.size());
     TLOG_DEBUG("ws user data id:" << current->getUId() << " data:" << std::string(&request[0], request.size())
-    << " size: " << request.size() << endl);
-    return 0;
+                                  << " size: " << request.size() << endl);
+
+    return handleTarsRequest(stParam);
 }
 
 int ProxyImp::tarsRequest(tars::TarsCurrentPtr current, vector<char> &response)

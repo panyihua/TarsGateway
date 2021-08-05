@@ -77,15 +77,20 @@ TC_NetWorkBuffer::PACKET_TYPE parseWebSocket(TC_NetWorkBuffer&in, vector<char> &
 
 void buildWSFrame(const vector<char> &data, vector<char> &frame)
 {
-    if(data.empty())
+    buildWSFrame(&data[0], data.size(), frame);
+}
+
+void buildWSFrame(const char* buff, uint32_t len, vector<char> &frame)
+{
+    if(len <= 0)
         return;
 
-    auto len = websocket_calc_frame_size(websocket_flags(WS_OP_TEXT | WS_FINAL_FRAME), data.size());
+    auto fLen = websocket_calc_frame_size(websocket_flags(WS_OP_TEXT | WS_FINAL_FRAME), len);
 
     frame.clear();
-    frame.resize(len, 0);
+    frame.resize(fLen, 0);
 
-    websocket_build_frame(&frame[0], websocket_flags(WS_OP_BINARY | WS_FINAL_FRAME), NULL, &data[0], data.size());
+    websocket_build_frame(&frame[0], websocket_flags(WS_OP_BINARY | WS_FINAL_FRAME), NULL, buff, len);
 }
 
 

@@ -353,6 +353,8 @@ int TupBase::handleTarsRequest(HandleParam &stParam)
             ret = parseTupRequest(stParam, tupRequest);
         }
 
+        TLOG_DEBUG("parse tars. servant:" << tupRequest.sServantName << " func:" << tupRequest.sFuncName << endl);
+
         if (ret != 0)
         {
             TLOGERROR("parseTupRequest error"

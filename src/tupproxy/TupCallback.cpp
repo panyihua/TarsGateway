@@ -15,6 +15,8 @@
 #include "util/tc_tea.h"
 #include <zlib.h>
 
+#include "websocket/websocket_adpt.h"
+
 using namespace std;
 using namespace tup;
 
@@ -22,7 +24,8 @@ using namespace tup;
 
 TupCallback::~TupCallback()
 {
-    handleResponse();
+    //handleResponse();
+    TLOG_DEBUG("release callback. cid:" << _current->getUId() << endl);
 }
 
 int TupCallback::onDispatch(ReqMessagePtr msg)
@@ -288,11 +291,41 @@ void TupCallback::doResponseException(int ret, const vector<char> &buffer)
 
 void TupCallback::handleResponse()
 {
-    // if (_rspBuffer.size() == 0)
-    // {
-    //     return;
-    // }
-    TLOGDEBUG("rsp size:" << _rspBuffer.size() << endl);
+
+    if(WSUserMgr::isWS(_current->getUId()))
+    {
+        wsSendResponse(_current, &_rspBuffer[0], _rspBuffer.size());
+        // 日志及统计上报等
+        ReportHelper::reportStat(g_app.getLocalServerName(), "RequestMonitor", "handleOK", 0);
+        ReportHelper::reportProperty("TupTotalRspNum");
+
+        //记录调用开始时间和结束时间的两者之差
+        int64_t nowTime = TC_Common::now2ms();
+        FDLOG("response") << _stParam.sReqIP << "|"
+                          << _stParam.sReqGuid << "|"
+                          << _stParam.sReqXua << "|"
+                          << _stParam.sServantName << "|"
+                          << _stParam.sFuncName << "|"
+                          << _stParam.iEptType << "|"
+                          << _stParam.iZipType << "|"
+                          << nowTime - _stParam.iTime << "|"
+                          << _rspBuffer.size()
+                          << endl;
+
+        //超级包打一个错误日志
+        if (_rspBuffer.size() > g_app.getRspSizeLimit())
+        {
+            TLOGERROR("packet is too big all|" << _rspBuffer.size()
+                                               << "|" << _stParam.sReqGuid << ", " << _stParam.sServantName << "|" << _stParam.sFuncName
+                                               << endl);
+            ReportHelper::reportProperty("RspTotalSizeLimit", 1, 1);
+        }
+
+        _rspBuffer.clear();
+        return;
+    }
+
+    TLOG_DEBUG("handleResponse rsp size:" << _rspBuffer.size() << endl);
 
     bool bGzipOk = !_stParam.pairAcceptZip.first.empty();
     bool bEncrypt = !_stParam.pairAcceptEpt.first.empty();
