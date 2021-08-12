@@ -93,9 +93,6 @@ int ProxyImp::wsRequest(tars::TarsCurrentPtr current, WSUser* ws, vector<char>& 
 
     stParam.wsUser = ws;
 
-    //todo 获取endpoint
-    stParam.endpoint;
-
     stParam.httpKeepAlive = true;
 
     stParam.sIP = ws->m_real_ip;

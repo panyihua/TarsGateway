@@ -377,9 +377,8 @@ int TupBase::handleTarsRequest(HandleParam &stParam)
                 if(tupRequest.sServantName == "CommApp.LoginServer.LoginObj" &&
                         tupRequest.sFuncName == "Login")
                 {
-                    //todo stParam.objName是固定的
-                    tupRequest.context["GateWay_endpoint"] = stParam.endpoint;
-                    tupRequest.context["GateWay_ws"] = stParam.current->getUId();
+                    tupRequest.context["GW_ep"] = stParam.current->getBindAdapter()->getEndpoint().toString();
+                    tupRequest.context["GW_ws"] = stParam.current->getUId();
                 }
                 else
                 {

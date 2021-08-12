@@ -43,7 +43,6 @@ struct HandleParam
     bool                     httpKeepAlive;
     bool                     isRestful;
     WSUser* wsUser;
-    string endpoint;
 };
 
 struct UpstreamInfo
