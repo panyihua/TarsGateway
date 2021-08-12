@@ -22,6 +22,8 @@ enum E_HTTP_RESLUT
     EHR_CONNRRR = 2,
 };
 
+struct WSUser;
+
 struct HandleParam
 {
     tars::TarsCurrentPtr       current;
@@ -40,6 +42,8 @@ struct HandleParam
     E_PROXY_TYPE             proxyType;
     bool                     httpKeepAlive;
     bool                     isRestful;
+    WSUser* wsUser;
+    string endpoint;
 };
 
 struct UpstreamInfo

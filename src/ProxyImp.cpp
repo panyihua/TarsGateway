@@ -14,6 +14,7 @@
 
 #include "websocket/websocket_adpt.h"
 #include "WSUser/WSUser.h"
+#include "MqThread/main.h"
 
 //////////////////////////////////////////////////////
 using namespace std;
@@ -38,6 +39,8 @@ void ProxyImp::initialize()
     initializeHttp();
 
     TARS_ADD_ADMIN_CMD_NORMAL("loadFilterHeader", TupBase::reloadFilterHeader);
+
+    startMqThread();
 }
 
 void ProxyImp::destroy()
@@ -49,6 +52,7 @@ int ProxyImp::doClose(CurrentPtr current)
 {
     if(WSUserMgr::isWS(current->getUId()))
     {
+        WSUserMgr::delUser(current->getUId());
         TLOG_DEBUG("close ws socket:" << current->getUId() << endl);
     }
     return 0;
@@ -56,16 +60,24 @@ int ProxyImp::doClose(CurrentPtr current)
 
 int ProxyImp::doRequest(tars::TarsCurrentPtr current, vector<char> &response)
 {
-    if(WSUserMgr::isWS(current->getUId()))
+    auto ws = WSUserMgr::getWS(current->getUId());
+
+    if(ws != nullptr)
     {
-        return wsRequest(current, response);
+        if(ws->m_current->getUId() != current->getUId())
+        {
+            TLOG_ERROR("do net reach.");
+            current->close();
+            return 0;
+        }
+        return wsRequest(current, ws, response);
     }else
     {
         return tarsRequest(current, response);
     }
 }
 
-int ProxyImp::wsRequest(tars::TarsCurrentPtr current, vector<char>& response)
+int ProxyImp::wsRequest(tars::TarsCurrentPtr current, WSUser* ws, vector<char>& response)
 {
     HandleParam stParam;
     string sErrMsg;
@@ -79,10 +91,14 @@ int ProxyImp::wsRequest(tars::TarsCurrentPtr current, vector<char>& response)
     stParam.iEptType = 0;
     stParam.iZipType = 0;
 
+    stParam.wsUser = ws;
+
+    //todo 获取endpoint
+    stParam.endpoint;
+
     stParam.httpKeepAlive = true;
 
-    //todo 从ws user拿
-    //stParam.sIP = current->getIp();
+    stParam.sIP = ws->m_real_ip;
 
     stParam.proxyType = EPT_TUP_PROXY;
 
@@ -112,23 +128,14 @@ int ProxyImp::tarsRequest(tars::TarsCurrentPtr current, vector<char> &response)
         stParam.length = 0;
         stParam.iEptType = 0;
         stParam.iZipType = 0;
+        stParam.wsUser = nullptr;
 
         stParam.httpRequest.decode(&request[0], request.size());
 
         TLOGDEBUG("request header:\r\n"
                   << stParam.httpRequest.genHeader() << endl);
 
-        const auto& upgrade = stParam.httpRequest.getHeader("Upgrade");
-        if(upgrade == "websocket")
-        {
-            TC_HttpResponse response;
-            makeHandshakeRsp(stParam.httpRequest, response);
-            const string& buffer = response.encode();
-            stParam.current->sendResponse(buffer.c_str(), buffer.length());
-            TLOGERROR("get a websocket" << endl);
-            WSUserMgr::addUser(current->getUId());
-            return 0;
-        }
+
 
         string sRemoteIp; //= stParam.httpRequest.getHeader("X-Forwarded-For-Pound");
 
@@ -145,6 +152,19 @@ int ProxyImp::tarsRequest(tars::TarsCurrentPtr current, vector<char> &response)
         }
 
         TLOGDEBUG("sRemoteIp:" << sRemoteIp << endl);
+
+        const auto& upgrade = stParam.httpRequest.getHeader("Upgrade");
+        if(upgrade == "websocket")
+        {
+            TC_HttpResponse response;
+            makeHandshakeRsp(stParam.httpRequest, response);
+            const string& buffer = response.encode();
+            stParam.current->sendResponse(buffer.c_str(), buffer.length());
+            TLOGERROR("get a websocket" << endl);
+            WSUserMgr::addUser(current, sRemoteIp);
+            return 0;
+        }
+
 
         if (stParam.httpRequest.checkHeader("Connection", "keep-alive"))
         {

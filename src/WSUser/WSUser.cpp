@@ -6,9 +6,21 @@
 
 std::map<uint32_t, WSUser> WSUserMgr:: m_user;
 
-void WSUserMgr::addUser(uint32_t connectId)
+std::mutex	WSUserMgr::m_userMutex;
+
+void WSUserMgr::addUser(tars::TarsCurrentPtr current, const std::string& ip)
 {
-    m_user[connectId];
+    auto connectId = current->getUId();
+    std::unique_lock<std::mutex> lock(m_userMutex);
+    auto& user = m_user[connectId];
+    user.m_current = current;
+    user.m_real_ip = ip;
+}
+
+void WSUserMgr::delUser(uint32_t connectId)
+{
+    std::unique_lock<std::mutex> lock(m_userMutex);
+    m_user.erase(connectId);
 }
 
 bool WSUserMgr::isWS(uint32_t connectId)
@@ -19,10 +31,12 @@ bool WSUserMgr::isWS(uint32_t connectId)
     return false;
 }
 
-WSUser *WSUserMgr::getWS(uint32_t connectId) {
+WSUser* WSUserMgr::getWS(uint32_t connectId) {
     auto it = m_user.find(connectId);
     if(it != m_user.end())
         return &(it->second);
     return nullptr;
 }
+
+
 

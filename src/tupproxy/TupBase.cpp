@@ -369,6 +369,28 @@ int TupBase::handleTarsRequest(HandleParam &stParam)
             return 0;
         }
 
+        //ws鉴权
+        if(stParam.wsUser != nullptr)
+        {
+            if(stParam.wsUser->m_uid == 0)
+            {
+                if(tupRequest.sServantName == "CommApp.LoginServer.LoginObj" &&
+                        tupRequest.sFuncName == "Login")
+                {
+                    //todo stParam.objName是固定的
+                    tupRequest.context["GateWay_endpoint"] = stParam.endpoint;
+                    tupRequest.context["GateWay_ws"] = stParam.current->getUId();
+                }
+                else
+                {
+                    ReportHelper::reportStat(g_app.getLocalServerName(), "RequestMonitor", "NotLoginReq", -1);
+                    ProxyUtils::doErrorRsp(401, stParam.current, stParam.httpKeepAlive);
+                    return 0;
+                }
+            }
+        }
+
+
         //解析代理
         THashInfo hi;
         ServantPrx proxy = TupProxyManager::getInstance()->getProxy(tupRequest.sServantName, tupRequest.sFuncName, stParam.httpRequest, hi);
