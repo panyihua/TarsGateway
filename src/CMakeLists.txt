@@ -27,4 +27,4 @@ add_custom_command(
         && echo ""
 )
 
-target_link_libraries(GatewayServer mysqlclient dl)
+target_link_libraries(GatewayServer mysqlclient dl amqpcpp uv)
