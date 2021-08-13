@@ -334,22 +334,8 @@ void TupCallback::handleResponse()
 
     //回复http协议
     TC_HttpResponse httpResponse;
-    httpResponse.setHeader("Date", TC_Common::now2GMTstr());
-    httpResponse.setHeader("Server", "TarsGateway-Server");
-    // httpResponse.setHeader("Content-Type", "application/multipart-formdata");
-    if (getType() == "json")
-    {
-        httpResponse.setHeader("Content-Type", "application/json");
-        httpResponse.setHeader("Access-Control-Allow-Origin", "*");
-        httpResponse.setHeader("Access-Control-Allow-Methods", "POST, GET");
-    }
-    else
-    {
-        httpResponse.setHeader("Content-Type", "application/octet-stream");
-    }
-    httpResponse.setHeader("Cache-Control", "no-cache"); //不缓存内容
+    ProxyUtils::AddHttpResponseHeader(httpResponse, getType());
 
-    //        if (_setConnectionTag == 1 && _bKeepAlive)
     if (_bKeepAlive)
     {
         httpResponse.setConnection("keep-alive");

@@ -358,6 +358,9 @@ struct authsAPICallback: public authstars::authsAPIPrxCallback{
             tars::TC_Json::writeValue(_p, body);
 
             httpRsp.setResponse(200, "Auth failed", body);
+
+            ProxyUtils::AddHttpResponseHeader(httpRsp, "json");
+
             const auto& s = httpRsp.encode();
             _stParam.current->sendResponse(s.c_str(), s.length());
         }

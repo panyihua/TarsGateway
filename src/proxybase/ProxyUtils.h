@@ -9,6 +9,23 @@ using namespace tars;
 class ProxyUtils
 {
 public:
+    static void AddHttpResponseHeader(TC_HttpResponse& rsp, const string& type)
+    {
+        rsp.setHeader("Date", TC_Common::now2GMTstr());
+        rsp.setHeader("Server", "TarsGateway-Server");
+        // httpResponse.setHeader("Content-Type", "application/multipart-formdata");
+        if (type == "json")
+        {
+            rsp.setHeader("Content-Type", "application/json");
+            rsp.setHeader("Access-Control-Allow-Origin", "*");
+            rsp.setHeader("Access-Control-Allow-Methods", "POST, GET");
+        }
+        else
+        {
+            rsp.setHeader("Content-Type", "application/octet-stream");
+        }
+        rsp.setHeader("Cache-Control", "no-cache"); //不缓存内容
+    }
 
     // 统一错误返回处理
     static string getHttpErrorRsp(int statusCode)
@@ -71,6 +88,8 @@ public:
             info = "Server Interval Error";
             content = "<html> <head><title>Server Interval Error</title></head> <body> <center><h1>Server Interval Error</h1></center> </body> </html>";
         }
+
+        AddHttpResponseHeader(httpRsp, "json");
         
         httpRsp.setResponse(statusCode, info, content);
         return httpRsp.encode();
