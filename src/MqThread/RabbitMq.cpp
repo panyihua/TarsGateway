@@ -102,6 +102,7 @@ RabbitMq::~RabbitMq()
 {
 }
 
+
 void RabbitMq::deploy()
 {
     m_channel->declareQueue(Queue::GateWay::LoginSuccess, AMQP::durable).onSuccess(
@@ -109,6 +110,7 @@ void RabbitMq::deploy()
     {
         TLOG_INFO( "declared queue " << name << std::endl);
     });
+    m_channel->declareExchange(Exchange::LoginServer::Name, (AMQP::ExchangeType)1, AMQP::durable);
     m_channel->bindQueue(Exchange::LoginServer::Name, Queue::GateWay::LoginSuccess, Exchange::LoginServer::KeySuccess)
     .onSuccess([]()
     {

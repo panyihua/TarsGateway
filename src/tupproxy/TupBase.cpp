@@ -351,7 +351,13 @@ struct authsAPICallback: public authstars::authsAPIPrxCallback{
         else{
             TLOG_ERROR("auth failed. code:" << ret.code << " message:" << ret.message << endl);
             TC_HttpResponse httpRsp;
-            httpRsp.setResponse(407, "Auth failed", ret.writeToJsonString());
+
+            tars::JsonValueObjPtr _p = new tars::JsonValueObj();
+            _p->value["tars_ret"] = tars::JsonOutput::writeJson(ret);
+            string body;
+            tars::TC_Json::writeValue(_p, body);
+
+            httpRsp.setResponse(200, "Auth failed", body);
             const auto& s = httpRsp.encode();
             _stParam.current->sendResponse(s.c_str(), s.length());
         }
