@@ -27,13 +27,19 @@ public:
 class WSUserMgr
 {
 public:
-    static void addUser(tars::TarsCurrentPtr, const std::string& ip);
-    static void delUser(uint32_t connectId);
-    static bool isWS(uint32_t connectId);
-    static WSUser* getWS(uint32_t connectId);
+    static WSUserMgr* getInstance()
+    {
+        static WSUserMgr mgr;
+        return &mgr;
+    }
+    void addUser(tars::TarsCurrentPtr, const std::string& ip);
+    void delUser(uint32_t connectId);
+    bool isWS(uint32_t connectId);
+    WSUser* getWS(uint32_t connectId);
 private:
-    static std::map<uint32_t, WSUser> m_user;
-    static std::mutex	m_userMutex;
+    WSUserMgr(){}
+    std::map<uint32_t, WSUser> m_user;
+    std::mutex	m_userMutex;
 };
 
 #endif //PROXY_SERVER_WSUSER_H

@@ -292,7 +292,7 @@ void TupCallback::doResponseException(int ret, const vector<char> &buffer)
 void TupCallback::handleResponse()
 {
 
-    if(WSUserMgr::isWS(_current->getUId()))
+    if(WSUserMgr::getInstance()->isWS(_current->getUId()))
     {
         wsSendResponse(_current, &_rspBuffer[0], _rspBuffer.size());
         // 日志及统计上报等

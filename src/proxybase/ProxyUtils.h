@@ -79,7 +79,7 @@ public:
     static void doErrorRsp(int statusCode, tars::TarsCurrentPtr current, bool keepAlive = false)
     {
         string data = getHttpErrorRsp(statusCode);
-        if(WSUserMgr::isWS(current->getUId()))
+        if(WSUserMgr::getInstance()->isWS(current->getUId()))
         {
             wsSendResponse(current, data.c_str(), data.size());
         } else

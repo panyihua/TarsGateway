@@ -50,9 +50,9 @@ void ProxyImp::destroy()
 
 int ProxyImp::doClose(CurrentPtr current)
 {
-    if(WSUserMgr::isWS(current->getUId()))
+    if(WSUserMgr::getInstance()->isWS(current->getUId()))
     {
-        WSUserMgr::delUser(current->getUId());
+        WSUserMgr::getInstance()->delUser(current->getUId());
         TLOG_DEBUG("close ws socket:" << current->getUId() << endl);
     }
     return 0;
@@ -60,7 +60,7 @@ int ProxyImp::doClose(CurrentPtr current)
 
 int ProxyImp::doRequest(tars::TarsCurrentPtr current, vector<char> &response)
 {
-    auto ws = WSUserMgr::getWS(current->getUId());
+    auto ws = WSUserMgr::getInstance()->getWS(current->getUId());
 
     if(ws != nullptr)
     {
@@ -158,7 +158,7 @@ int ProxyImp::tarsRequest(tars::TarsCurrentPtr current, vector<char> &response)
             const string& buffer = response.encode();
             stParam.current->sendResponse(buffer.c_str(), buffer.length());
             TLOGERROR("get a websocket" << endl);
-            WSUserMgr::addUser(current, sRemoteIp);
+            WSUserMgr::getInstance()->addUser(current, sRemoteIp);
             return 0;
         }
 

@@ -4,9 +4,6 @@
 
 #include "WSUser.h"
 
-std::map<uint32_t, WSUser> WSUserMgr:: m_user;
-
-std::mutex	WSUserMgr::m_userMutex;
 
 void WSUserMgr::addUser(tars::TarsCurrentPtr current, const std::string& ip)
 {

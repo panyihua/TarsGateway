@@ -52,7 +52,7 @@ TC_NetWorkBuffer::PACKET_TYPE gatewayParser(TC_NetWorkBuffer&in, vector<char> &o
 {
     auto c = (tars::TC_EpollServer::Connection*)in.getConnection();
 
-    if(WSUserMgr::isWS(c->getId()))
+    if(WSUserMgr::getInstance()->isWS(c->getId()))
     {
         return parseWebSocket(in, out);
     }
