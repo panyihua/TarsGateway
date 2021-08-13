@@ -6,13 +6,19 @@ project(GatewayServer)
 
 gen_server("Base" "GatewayServer")
 
+set(SERVER_ID  35)
+set(TARS_WEB_HOST http://10.100.5.55:3000)
+set(TARS_WEB_TICKET  362539a5fe092d31859dcf9131b6b1a0057bcb49)
+
+
+
 add_custom_command(
         TARGET "GatewayServer"
         PRE_BUILD
         COMMAND echo "stop server"
-        && curl --location --request POST 'http://10.100.5.55:3000/api/add_task?ticket=362539a5fe092d31859dcf9131b6b1a0057bcb49'
+        && curl --location --request POST '${TARS_WEB_HOST}/api/add_task?ticket=${TARS_WEB_TICKET}'
         --header 'Content-Type: application/json'
-        --data '{"serial": true,"items": [{"server_id":"23","command":"stop","parameters": {}}]}'
+        --data '{"serial": true,"items": [{"server_id":"${SERVER_ID}","command":"stop","parameters": {}}]}'
         && echo ""
         && sleep 2
 )
@@ -21,9 +27,9 @@ add_custom_command(
         TARGET "GatewayServer"
         POST_BUILD
         COMMAND echo "restart server"
-        && curl --location --request POST 'http://10.100.5.55:3000/api/add_task?ticket=362539a5fe092d31859dcf9131b6b1a0057bcb49'
+        && curl --location --request POST '${TARS_WEB_HOST}/api/add_task?ticket=${TARS_WEB_TICKET}'
         --header 'Content-Type: application/json'
-        --data '{"serial": true,"items": [{"server_id":"23","command":"restart","parameters": {}}]}'
+        --data '{"serial": true,"items": [{"server_id":"${SERVER_ID}","command":"restart","parameters": {}}]}'
         && echo ""
 )
 
