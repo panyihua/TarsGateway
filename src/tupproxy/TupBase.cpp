@@ -336,26 +336,29 @@ void TupBase::getFilter(HandleParam &stParam)
 }
 
 struct authsAPICallback: public authstars::authsAPIPrxCallback{
-    authsAPICallback(const std::function<int(RequestPacket&)>& func, const RequestPacket& tupRequest)
-    :_doTarsRequest(func), _tupRequest(tupRequest)
+    authsAPICallback(const std::function<int(HandleParam&, RequestPacket&)>& func, const HandleParam& stParam, const RequestPacket& tupRequest)
+    :_doTarsRequest(func), _stParam(stParam), _tupRequest(tupRequest)
     {}
     virtual void callback_PermissionVerify(const authstars::PermissionVerifyRsp& ret)
     {
         if(ret.code == 0)
         {
-            RequestPacket req = _tupRequest;
-            req.context["userId"] = ret.data.userid;
-            _doTarsRequest(req);
+            _tupRequest.context["userId"] = ret.data.userid;
+            _doTarsRequest(_stParam, _tupRequest);
+
+            TLOG_DEBUG("auth OK uid:" << ret.data.userid << endl);
         }
         else{
             TLOG_ERROR("auth failed. code:" << ret.code << " message:" << ret.message << endl);
+            ProxyUtils::doErrorRsp(502, _stParam.current, _stParam.httpKeepAlive);
         }
     }
     virtual void callback_PermissionVerify_exception(tars::Int32 ret)
     {
         TLOG_ERROR("call PermissionVerify error. ret:" << ret << endl);
     }
-    std::function<int(RequestPacket&)> _doTarsRequest;
+    std::function<int(HandleParam&, RequestPacket&)> _doTarsRequest;
+    HandleParam _stParam;
     RequestPacket _tupRequest;
 };
 
@@ -387,7 +390,8 @@ int TupBase::handleTarsRequest(HandleParam &stParam)
     }catch (...)
     {
         TLOG_ERROR("catch unknown error...");
-        return -1;
+        ProxyUtils::doErrorRsp(400, stParam.current, stParam.httpKeepAlive);
+        return -2;
     }
 
     if(g_app.getAdminAuthObj().empty())
@@ -398,16 +402,23 @@ int TupBase::handleTarsRequest(HandleParam &stParam)
         auto pComm = tars::Application::getCommunicator();
         if (!pComm)
         {
+            ProxyUtils::doErrorRsp(502, stParam.current, stParam.httpKeepAlive);
             return -1;
         }
         auto proxy = pComm->stringToProxy<authstars::authsAPIPrx>(g_app.getAdminAuthObj());
+        if(proxy->getEndpoint().empty())
+        {
+            TLOG_ERROR("auth no proxy:" << g_app.getAdminAuthObj() << endl);
+            ProxyUtils::doErrorRsp(502, stParam.current, stParam.httpKeepAlive);
+            return -2;
+        }
         authstars::PermissionVerifyReq req;
         req.funcName = tupRequest.sFuncName;
         req.remoteAddr = stParam.sIP;
         req.servantName = tupRequest.sServantName;
         req.token = stParam.httpRequest.getHeader("AccessSessionID");
         req.reqParam = stParam.httpRequest.getContent();
-        authstars::authsAPIPrxCallbackPtr cb = new authsAPICallback(std::bind(&TupBase::doTarsRequest, this, stParam, std::placeholders::_1), tupRequest);
+        authstars::authsAPIPrxCallbackPtr cb = new authsAPICallback(std::bind(&TupBase::doTarsRequest, this, std::placeholders::_1, std::placeholders::_2), stParam, tupRequest);
         proxy->async_PermissionVerify(cb, req);
         return 0;
     }

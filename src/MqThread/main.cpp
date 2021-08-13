@@ -10,7 +10,6 @@
 #include "MqThread/RabbitMq.h"
 #include "GatewayServer.h"
 
-extern GatewayServer g_app;
 
 void threadMain()
 {
