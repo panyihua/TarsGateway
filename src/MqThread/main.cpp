@@ -13,9 +13,8 @@
 
 void threadMain()
 {
-    static RabbitMq g_mq;
-    g_mq.init(g_app.getConfFile());
-    g_mq.run();
+    RabbitMq::getInstance()->init(g_app.getConfFile());
+    RabbitMq::getInstance()->run();
 }
 
 int startMqThread()

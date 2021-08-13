@@ -14,7 +14,6 @@
 
 #include "websocket/websocket_adpt.h"
 #include "WSUser/WSUser.h"
-#include "MqThread/main.h"
 
 //////////////////////////////////////////////////////
 using namespace std;
@@ -39,8 +38,6 @@ void ProxyImp::initialize()
     initializeHttp();
 
     TARS_ADD_ADMIN_CMD_NORMAL("loadFilterHeader", TupBase::reloadFilterHeader);
-
-    startMqThread();
 }
 
 void ProxyImp::destroy()

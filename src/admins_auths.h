@@ -3,8 +3,8 @@
 // TARS version 2.4.13.
 // **********************************************************************
 
-#ifndef __ADMINS.AUTHS_H_
-#define __ADMINS.AUTHS_H_
+#ifndef __ADMINS_AUTHS_H_
+#define __ADMINS_AUTHS_H_
 
 #include <map>
 #include <string>

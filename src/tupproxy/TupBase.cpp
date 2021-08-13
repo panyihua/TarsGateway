@@ -19,7 +19,7 @@
 #include "util/tc_tea.h"
 #include <zlib.h>
 #include <functional>
-#include "admins.h"
+#include "admins_auths.h"
 
 //////////////////////////////////////////////////////
 
@@ -350,7 +350,10 @@ struct authsAPICallback: public authstars::authsAPIPrxCallback{
         }
         else{
             TLOG_ERROR("auth failed. code:" << ret.code << " message:" << ret.message << endl);
-            ProxyUtils::doErrorRsp(502, _stParam.current, _stParam.httpKeepAlive);
+            TC_HttpResponse httpRsp;
+            httpRsp.setResponse(200, "Auth failed", ret.message);
+            const auto& s = httpRsp.encode();
+            _stParam.current->sendResponse(s.c_str(), s.length());
         }
     }
     virtual void callback_PermissionVerify_exception(tars::Int32 ret)

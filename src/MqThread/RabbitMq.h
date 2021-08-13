@@ -13,7 +13,10 @@ namespace AMQP {
 class RabbitMq
 {
 public:
-    RabbitMq();
+    static RabbitMq* getInstance(){
+        static RabbitMq g_mq;
+        return &g_mq;
+    }
     ~RabbitMq();
     void init(const std::string& configPath);
     void run();
@@ -21,6 +24,7 @@ public:
     void publish(const std::string& routingKey, const std::string& body);
 
 private:
+    RabbitMq();
     std::string m_uri;
 
     AMQP::TcpChannel* m_channel;

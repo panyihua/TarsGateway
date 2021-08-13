@@ -31,6 +31,26 @@ namespace MqName {
 
 using namespace MqName;
 
+class MqHandler : public AMQP::LibUvHandler
+{
+public:
+    MqHandler(uv_loop_t *loop) : AMQP::LibUvHandler(loop) {}
+public:
+    virtual void onError(AMQP::TcpConnection *connection, const char *message) override
+    {
+        TLOG_ERROR( "handle ERROR. message:" << message << std::endl);
+    }
+    virtual void onConnected(AMQP::TcpConnection *connection) override
+    {
+        TLOG_INFO( "rabbit mq handle connected. " << std::endl);
+    }
+    virtual void onLost(AMQP::TcpConnection *connection)
+    {
+        TLOG_ERROR( "rabbit mq handle nost connection. " << std::endl);
+    }
+};
+
+
 
 void RabbitMq::init(const std::string& configPath) {
     tars::TC_Config conf;
@@ -51,7 +71,8 @@ void RabbitMq::run() {
     }
 
     auto *loop = uv_default_loop();
-    AMQP::LibUvHandler handler(loop);
+    MqHandler handler(loop);
+    TLOG_INFO("rabbitMq connect to:" << m_uri << endl);
     AMQP::TcpConnection connection(&handler, AMQP::Address(m_uri));
     AMQP::TcpChannel channel(&connection);
     m_channel = &channel;

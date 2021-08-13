@@ -10,6 +10,7 @@
 //include "gperftools/profiler.h"
 #include "websocket/websocket_adpt.h"
 #include "WSUser/WSUser.h"
+#include "MqThread/main.h"
 
 using namespace std;
 
@@ -156,6 +157,8 @@ void GatewayServer::initialize()
     {
         TLOGERROR("add flowcontrol fail, exception:" << e.what() << endl);
     }
+
+    startMqThread();
 }
 
 bool GatewayServer::isTupHost(const string &h) const
