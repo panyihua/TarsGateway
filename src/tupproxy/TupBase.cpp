@@ -19,6 +19,7 @@
 #include "util/tc_tea.h"
 #include <zlib.h>
 #include <functional>
+#include <string>
 #include "admins_auths.h"
 
 //////////////////////////////////////////////////////
@@ -343,7 +344,7 @@ struct authsAPICallback: public authstars::authsAPIPrxCallback{
     {
         if(ret.code == 0)
         {
-            _tupRequest.context["userId"] = ret.data.userid;
+            _tupRequest.context["userId"] = std::to_string(ret.data.userid);
             _doTarsRequest(_stParam, _tupRequest);
 
             TLOG_DEBUG("auth OK uid:" << ret.data.userid << endl);
