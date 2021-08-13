@@ -18,6 +18,8 @@
 #include "util/tc_parsepara.h"
 #include "util/tc_tea.h"
 #include <zlib.h>
+#include <functional>
+#include "admins.h"
 
 //////////////////////////////////////////////////////
 
@@ -333,42 +335,90 @@ void TupBase::getFilter(HandleParam &stParam)
     // }
 }
 
+struct authsAPICallback: public authstars::authsAPIPrxCallback{
+    authsAPICallback(const std::function<int(RequestPacket&)>& func, const RequestPacket& tupRequest)
+    :_doTarsRequest(func), _tupRequest(tupRequest)
+    {}
+    virtual void callback_PermissionVerify(const authstars::PermissionVerifyRsp& ret)
+    {
+        if(ret.code == 0)
+        {
+            RequestPacket req = _tupRequest;
+            req.context["userId"] = ret.data.userid;
+            _doTarsRequest(req);
+        }
+        else{
+            TLOG_ERROR("auth failed. code:" << ret.code << " message:" << ret.message << endl);
+        }
+    }
+    virtual void callback_PermissionVerify_exception(tars::Int32 ret)
+    {
+        TLOG_ERROR("call PermissionVerify error. ret:" << ret << endl);
+    }
+    std::function<int(RequestPacket&)> _doTarsRequest;
+    RequestPacket _tupRequest;
+};
+
 int TupBase::handleTarsRequest(HandleParam &stParam)
 {
-    string sErrMsg;
-
-    try
-    {
-        stParam.current->setResponse(false);
-        //解析出所有的tup请求
-        RequestPacket tupRequest;
-
+    RequestPacket tupRequest;
+    try {
         int ret = -1;
-        if (EPT_JSON_PROXY == stParam.proxyType)
-        {
+        if (EPT_JSON_PROXY == stParam.proxyType) {
             ret = parseJsonRequest(stParam, tupRequest);
-        }
-        else if (EPT_TUP_PROXY == stParam.proxyType)
-        {
+        } else if (EPT_TUP_PROXY == stParam.proxyType) {
             ret = parseTupRequest(stParam, tupRequest);
         }
 
         TLOG_DEBUG("parse tars. servant:" << tupRequest.sServantName << " func:" << tupRequest.sFuncName << endl);
 
-        if (ret != 0)
-        {
+        if (ret != 0) {
             TLOGERROR("parseTupRequest error"
-                      << ",ret:" << ret
-                      << ",length:" << stParam.length
-                      << ",sGUID:" << stParam.sGUID
-                      << endl);
+                              << ",ret:" << ret
+                              << ",length:" << stParam.length
+                              << ",sGUID:" << stParam.sGUID
+                              << endl);
 
             ReportHelper::reportStat(g_app.getLocalServerName(), "RequestMonitor", "ParseTupBodyErr", -1);
             //stParam.current->close();
             ProxyUtils::doErrorRsp(400, stParam.current, stParam.httpKeepAlive);
             return 0;
         }
+    }catch (...)
+    {
+        TLOG_ERROR("catch unknown error...");
+        return -1;
+    }
 
+    if(g_app.getAdminAuthObj().empty())
+    {
+        return doTarsRequest(stParam, tupRequest);
+    } else
+    {
+        auto pComm = tars::Application::getCommunicator();
+        if (!pComm)
+        {
+            return -1;
+        }
+        auto proxy = pComm->stringToProxy<authstars::authsAPIPrx>(g_app.getAdminAuthObj());
+        authstars::PermissionVerifyReq req;
+        req.funcName = tupRequest.sFuncName;
+        req.remoteAddr = stParam.sIP;
+        req.servantName = tupRequest.sServantName;
+        req.token = stParam.httpRequest.getHeader("AccessSessionID");
+        req.reqParam = stParam.httpRequest.getContent();
+        authstars::authsAPIPrxCallbackPtr cb = new authsAPICallback(std::bind(&TupBase::doTarsRequest, this, stParam, std::placeholders::_1), tupRequest);
+        proxy->async_PermissionVerify(cb, req);
+        return 0;
+    }
+}
+
+int TupBase::doTarsRequest(HandleParam &stParam, RequestPacket& tupRequest)
+{
+    string sErrMsg;
+
+    try
+    {
         //ws鉴权
         if(stParam.wsUser != nullptr)
         {

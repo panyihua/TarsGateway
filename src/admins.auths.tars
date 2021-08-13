@@ -1,0 +1,25 @@
+module authstars{
+    struct VerifyData {
+        0 require long userid;
+        1 require bool pass;
+    };
+
+    struct PermissionVerifyReq  {
+        0 require string token;
+        1 require string servantName;
+        2 require string funcName;
+        3 optional string reqParam;
+        4 optional string remoteAddr;
+    };
+
+    struct PermissionVerifyRsp {
+        0 require int code;
+        1 optional string message;
+        2 optional VerifyData data;
+    };
+
+    interface authsAPI{
+        // 权限校验
+        PermissionVerifyRsp PermissionVerify(PermissionVerifyReq req);
+    };
+};

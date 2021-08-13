@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.0)
 
 project(proxy-server)
 
@@ -6,6 +6,7 @@ option(TARS_MYSQL "option for mysql" ON)
 option(TARS_SSL "option for ssl" OFF)
 option(TARS_HTTP2 "option for http2" OFF)
 option(TARS_GPREF "option for gpref" OFF)
+
 
 
 if(WIN32)

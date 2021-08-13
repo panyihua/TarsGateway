@@ -109,6 +109,7 @@ void GatewayServer::initialize()
     }
     _jsonPathEx = _jsonPath + "/";
     _monitorUrl = TC_Common::trim(conf.get("/main/base<monitor_url>", "/monitor/monitor.html"));
+    _adminAuthObj = TC_Common::trim(conf.get("/main<admin_auth_obj>", ""));
 
     TLOGDEBUG("_rspSizeLimit:" << _rspSizeLimit
                                << ", _localServerName:" << _localServerName

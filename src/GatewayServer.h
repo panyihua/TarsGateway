@@ -74,6 +74,10 @@ public:
     {
         return _tupProxyConf;
     }
+    const string& getAdminAuthObj() const
+    {
+        return _adminAuthObj;
+    }
 
     bool isTupHost(const string &h) const;
 
@@ -103,6 +107,7 @@ public:
     set<int> _inactiveRetCode;
     set<int> _timeoutRetCode;
     string _tupProxyConf;
+    string _adminAuthObj;
 };
 
 extern GatewayServer g_app;

@@ -98,6 +98,8 @@ protected:
      */
   int handleTarsRequest(HandleParam &stParam);
 
+  int doTarsRequest(HandleParam &stParam, RequestPacket& tupRequest);
+
   /**
      * 解析TUP包
      * 
