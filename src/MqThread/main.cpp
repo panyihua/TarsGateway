@@ -13,8 +13,17 @@
 
 void threadMain()
 {
-    RabbitMq::getInstance()->init(g_app.getConfFile());
-    RabbitMq::getInstance()->run();
+    while(true)
+    {
+        auto b = RabbitMq::getInstance()->init(g_app.getConfFile());
+        if(!b){
+            break;
+        }
+        RabbitMq::getInstance()->run();
+        std::this_thread::sleep_for(std::chrono::seconds(5));
+    }
+
+    TLOG_ERROR("mq thread over" << endl);
 }
 
 int startMqThread()

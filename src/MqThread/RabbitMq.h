@@ -18,7 +18,7 @@ public:
         return &g_mq;
     }
     ~RabbitMq();
-    void init(const std::string& configPath);
+    bool init(const std::string& configPath);
     void run();
     void deploy();
     void publish(const std::string& routingKey, const std::string& body);

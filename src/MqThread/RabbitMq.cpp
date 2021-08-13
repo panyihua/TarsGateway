@@ -52,11 +52,13 @@ public:
 
 
 
-void RabbitMq::init(const std::string& configPath) {
+bool RabbitMq::init(const std::string& configPath) {
     tars::TC_Config conf;
     conf.parseFile(configPath);
-    m_uri = tars::TC_Common::trim(conf.get("/main/rabbitMq<uri>", "amqp://noData"));
-
+    m_uri = tars::TC_Common::trim(conf.get("/main/rabbitMq<uri>", ""));
+    if(m_uri.empty())
+        return false;
+    return true;
 }
 
 void RabbitMq::publish(const std::string& routingKey, const std::string& body) {
@@ -86,8 +88,9 @@ void RabbitMq::run() {
 
     uv_run(loop, UV_RUN_DEFAULT);
 
+    //连接断开会走到这里
     m_channel = nullptr;
-    TLOG_ERROR("loop over" << endl);
+    TLOG_ERROR("mq thread loop over" << endl);
 }
 
 RabbitMq::RabbitMq()
