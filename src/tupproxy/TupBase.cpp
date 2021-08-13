@@ -356,6 +356,7 @@ struct authsAPICallback: public authstars::authsAPIPrxCallback{
     virtual void callback_PermissionVerify_exception(tars::Int32 ret)
     {
         TLOG_ERROR("call PermissionVerify error. ret:" << ret << endl);
+        ProxyUtils::doErrorRsp(502, _stParam.current, _stParam.httpKeepAlive);
     }
     std::function<int(HandleParam&, RequestPacket&)> _doTarsRequest;
     HandleParam _stParam;
