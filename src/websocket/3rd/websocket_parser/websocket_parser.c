@@ -255,32 +255,3 @@ size_t websocket_build_frame(char * frame, websocket_flags flags, const char mas
     return body_offset + data_len;
 }
 
-//no mask
-size_t websocket_build_frame_head(char * frame, size_t data_len) {
-    size_t body_offset = 0;
-    frame[0] = 0;
-    frame[1] = 0;
-
-    if(data_len < 126) {
-        frame[1] |= data_len;
-        body_offset = 2;
-    } else if(data_len <= 0xFFFF) {
-        frame[1] |= 126;
-        frame[2] = (char) (data_len >> 8);
-        frame[3] = (char) (data_len & 0xFF);
-        body_offset = 4;
-    } else {
-        frame[1] |= 127;
-        frame[2] = (char) ((data_len >> 56) & 0xFF);
-        frame[3] = (char) ((data_len >> 48) & 0xFF);
-        frame[4] = (char) ((data_len >> 40) & 0xFF);
-        frame[5] = (char) ((data_len >> 32) & 0xFF);
-        frame[6] = (char) ((data_len >> 24) & 0xFF);
-        frame[7] = (char) ((data_len >> 16) & 0xFF);
-        frame[8] = (char) ((data_len >>  8) & 0xFF);
-        frame[9] = (char) ((data_len)       & 0xFF);
-        body_offset = 10;
-    }
-    return body_offset;
-}
-

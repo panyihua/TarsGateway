@@ -20,7 +20,7 @@
 #include <zlib.h>
 #include <functional>
 #include <string>
-#include "admins_auths.h"
+#include "tarsdepend/Admin/admins_auths.h"
 
 //////////////////////////////////////////////////////
 
@@ -408,7 +408,7 @@ int TupBase::handleTarsRequest(HandleParam &stParam)
         return -2;
     }
 
-    if(g_app.getAdminAuthObj().empty())
+    if(stParam.wsUser != nullptr || g_app.getAdminAuthObj().empty())
     {
         return doTarsRequest(stParam, tupRequest);
     } else
@@ -452,8 +452,8 @@ int TupBase::doTarsRequest(HandleParam &stParam, RequestPacket& tupRequest)
                 if(tupRequest.sServantName == "CommApp.LoginServer.LoginObj" &&
                         tupRequest.sFuncName == "Login")
                 {
-                    tupRequest.context["GW_ep"] = stParam.current->getBindAdapter()->getEndpoint().toString();
-                    tupRequest.context["GW_ws"] = stParam.current->getUId();
+                    tupRequest.context["GW_gate"] = stParam.current->getBindAdapter()->getEndpoint().toString();
+                    tupRequest.context["GW_cid"] = std::to_string(stParam.current->getUId());
                 }
                 else
                 {

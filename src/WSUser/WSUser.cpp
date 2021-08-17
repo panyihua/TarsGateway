@@ -28,7 +28,7 @@ bool WSUserMgr::isWS(uint32_t connectId)
     return false;
 }
 
-WSUser* WSUserMgr::getWS(uint32_t connectId) {
+WSUser* WSUserMgr::getUser(uint32_t connectId) {
     auto it = m_user.find(connectId);
     if(it != m_user.end())
         return &(it->second);

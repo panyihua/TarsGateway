@@ -57,7 +57,7 @@ int ProxyImp::doClose(CurrentPtr current)
 
 int ProxyImp::doRequest(tars::TarsCurrentPtr current, vector<char> &response)
 {
-    auto ws = WSUserMgr::getInstance()->getWS(current->getUId());
+    auto ws = WSUserMgr::getInstance()->getUser(current->getUId());
 
     if(ws != nullptr)
     {

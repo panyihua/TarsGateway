@@ -1,0 +1,19 @@
+module loginTars
+{
+    struct LoginReq {
+        0 require long uid;
+        1 require int type;
+        2 require string token;
+    };
+
+    struct LoginRsp {
+        0 require int code;
+        1 require string reason;
+    };
+
+	interface LoginIF
+	{
+	    LoginRsp Login(LoginReq req);
+
+	};
+};

@@ -1,0 +1,11 @@
+module loginMqTars
+{
+    //exchange:LoginServer
+    //routing key:Success
+    struct UserLoginMsg
+    {
+        0 require long uid;
+        1 require string gate;
+        2 require long cid;
+    };
+};

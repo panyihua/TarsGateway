@@ -18,6 +18,10 @@ public:
     {
         m_uid = 0;
     }
+    void setUid(int64_t uid)
+    {
+        m_uid = uid;
+    }
     int64_t m_uid;
 
     tars::TarsCurrentPtr m_current;
@@ -35,7 +39,7 @@ public:
     void addUser(tars::TarsCurrentPtr, const std::string& ip);
     void delUser(uint32_t connectId);
     bool isWS(uint32_t connectId);
-    WSUser* getWS(uint32_t connectId);
+    WSUser* getUser(uint32_t connectId);
 private:
     WSUserMgr(){}
     std::map<uint32_t, WSUser> m_user;

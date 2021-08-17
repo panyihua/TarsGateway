@@ -9,6 +9,8 @@
 #include <util/tc_config.h>
 #include <util/tc_common.h>
 #include <servant/RemoteLogger.h>
+#include "tarsdepend/LoginServer/loginMq.h"
+#include "WSUser/WSUser.h"
 
 
 namespace MqName {
@@ -18,7 +20,8 @@ namespace MqName {
             const string KeySuccess = "Success";
         }
         namespace GateWay{
-            const string Name = "GateWay";
+            const string Name = "GateWayServer";
+            const string Key = "UidBindCid";
         }
     }
 
@@ -46,7 +49,10 @@ public:
     }
     virtual void onLost(AMQP::TcpConnection *connection)
     {
-        TLOG_ERROR( "rabbit mq handle nost connection. " << std::endl);
+        TLOG_ERROR( "rabbit mq handle lost connection. " << std::endl);
+    }
+    virtual void onHeartbeat(AMQP::TcpConnection *connection) {
+        connection->heartbeat();
     }
 };
 
@@ -56,14 +62,15 @@ bool RabbitMq::init(const std::string& configPath) {
     tars::TC_Config conf;
     conf.parseFile(configPath);
     m_uri = tars::TC_Common::trim(conf.get("/main/rabbitMq<uri>", ""));
-    if(m_uri.empty())
-        return false;
-    return true;
+
+    return !m_uri.empty();
 }
 
+//todo 业务层调用，需要加锁
 void RabbitMq::publish(const std::string& routingKey, const std::string& body) {
     m_channel->publish(m_exchange, routingKey, body);
 }
+
 
 void RabbitMq::run() {
     if(m_channel != nullptr)
@@ -76,19 +83,23 @@ void RabbitMq::run() {
     MqHandler handler(loop);
     TLOG_INFO("rabbitMq connect to:" << m_uri << endl);
     AMQP::TcpConnection connection(&handler, AMQP::Address(m_uri));
+
     AMQP::TcpChannel channel(&connection);
     m_channel = &channel;
     m_channel->onError(
-    [](const char *message)
+    [loop](const char *message)
     {
+        uv_loop_close(loop);
         TLOG_ERROR( "channel error ERROR. message:" << message << std::endl);
     });
 
     this->deploy();
 
     uv_run(loop, UV_RUN_DEFAULT);
+    uv_loop_close(loop);
 
     //连接断开会走到这里
+    m_channel->close();
     m_channel = nullptr;
     TLOG_ERROR("mq thread loop over" << endl);
 }
@@ -111,6 +122,9 @@ void RabbitMq::deploy()
         TLOG_INFO( "declared queue " << name << std::endl);
     });
     m_channel->declareExchange(Exchange::LoginServer::Name, (AMQP::ExchangeType)1, AMQP::durable);
+
+    m_channel->declareExchange(Exchange::GateWay::Name, (AMQP::ExchangeType)1, AMQP::durable);
+
     m_channel->bindQueue(Exchange::LoginServer::Name, Queue::GateWay::LoginSuccess, Exchange::LoginServer::KeySuccess)
     .onSuccess([]()
     {
@@ -119,10 +133,33 @@ void RabbitMq::deploy()
 
     m_exchange = Exchange::GateWay::Name;
 
-    m_channel->consume(Queue::GateWay::LoginSuccess).onMessage(
-            [](const AMQP::Message &message, uint64_t deliveryTag, bool redelivered)
+    int flag = 0;
+    // flag |= AMQP::noack;
+    m_channel->consume(Queue::GateWay::LoginSuccess, flag).onMessage(
+            [this](const AMQP::Message &message, uint64_t deliveryTag, bool redelivered)
             {
-                TLOG_INFO( message.routingkey() << " " << message.body() << endl);
+
+                TLOG_INFO("consume msg:" <<  message.routingkey() << " " << message.body() << endl);
+
+                loginMqTars::UserLoginMsg msg;
+                msg.readFromJsonString(message.body());
+
+                auto user = WSUserMgr::getInstance()->getUser(msg.cid);
+                if(user == nullptr) {
+                    TLOG_ERROR("consume login message msg error. " << msg << endl);
+                }
+                else {
+                    if (user->m_current->getBindAdapter()->getEndpoint().toString() == msg.gate){
+                        user->setUid(msg.uid);
+                        TLOG_INFO("bind user ok.   " << msg << endl);
+
+                        this->publish(Exchange::GateWay::Key, message.body());
+
+                    } else{
+                        TLOG_INFO("bind user onther gate:   " << msg << endl);
+                    }
+                }
+                this->m_channel->ack(deliveryTag);
             });
 
 }
