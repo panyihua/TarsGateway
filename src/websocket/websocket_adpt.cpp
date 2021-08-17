@@ -61,7 +61,7 @@ TC_NetWorkBuffer::PACKET_TYPE parseWebSocket(TC_NetWorkBuffer&in, vector<char> &
             TLOG_DEBUG("connectId:" << c->getId() << " parseWebSocket parser less. head:" << head << " body:" << body << endl);
             return TC_NetWorkBuffer::PACKET_LESS;
         }
-        int op = websocket_parser_get_opcode(&parser);
+        int op = parser.flags & WS_OP_MASK;
 
         in.moveHeader(head);
         in.getHeader(body, out);
@@ -76,7 +76,6 @@ TC_NetWorkBuffer::PACKET_TYPE parseWebSocket(TC_NetWorkBuffer&in, vector<char> &
             }else if(op == WS_OP_PING){
                 TLOG_DEBUG("get a websocket ping cmd connectId:" << c->getId() << endl);
             }
-            return TC_NetWorkBuffer::PACKET_LESS;
         }
 
         TLOG_DEBUG("connectId:" << c->getId() << " parseWebSocket parser ok. head:" << head << " body:" << body << endl);
