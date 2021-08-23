@@ -20,7 +20,7 @@ int CidProxyImp::doRequest(tars::TarsCurrentPtr current, vector<char>& response)
     auto ws = WSUserMgr::getInstance()->getUser(cid);
     if(ws){
         if(ws->m_current){
-            ws->m_current->sendResponse(&current->getRequestBuffer()[0], current->getRequestBuffer().size());
+            wsSendResponse(ws->m_current, &current->getRequestBuffer()[0], current->getRequestBuffer().size());
         }
     }
     return 0;
