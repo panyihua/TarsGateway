@@ -11,6 +11,7 @@
 #include "websocket/websocket_adpt.h"
 #include "WSUser/WSUser.h"
 #include "MqThread/main.h"
+#include "CidProxy/CidProxyImp.h"
 
 using namespace std;
 
@@ -70,6 +71,8 @@ void GatewayServer::initialize()
     addServant<ProxyImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".ProxyObj");
     //addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".TupProxyObj", &TupProtocol::parseHttp);
     addServantProtocol(ServerConfig::Application + "." + ServerConfig::ServerName + ".ProxyObj", &gatewayParser);
+
+    addServant<CidProxyImp>(ServerConfig::Application + "." + ServerConfig::ServerName + ".CidProxyObj");
 
     addConfig(ServerConfig::ServerName + ".conf");
     TC_Config conf;

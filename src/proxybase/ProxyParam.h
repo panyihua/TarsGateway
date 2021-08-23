@@ -3,6 +3,7 @@
 #include "servant/Application.h"
 #include "ReportHelper.h"
 #include "GatewayServer.h"
+#include "WSUser/WSUser.h"
 
 using namespace tars;
 
@@ -22,7 +23,6 @@ enum E_HTTP_RESLUT
     EHR_CONNRRR = 2,
 };
 
-struct WSUser;
 
 struct HandleParam
 {
@@ -42,7 +42,7 @@ struct HandleParam
     E_PROXY_TYPE             proxyType;
     bool                     httpKeepAlive;
     bool                     isRestful;
-    WSUser* wsUser;
+    WSUserPtr wsUser;
 };
 
 struct UpstreamInfo

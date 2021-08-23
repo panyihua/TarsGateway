@@ -59,7 +59,7 @@ int ProxyImp::doRequest(tars::TarsCurrentPtr current, vector<char> &response)
 {
     auto ws = WSUserMgr::getInstance()->getUser(current->getUId());
 
-    if(ws != nullptr)
+    if(ws)
     {
         if(ws->m_current->getUId() != current->getUId())
         {
@@ -74,7 +74,7 @@ int ProxyImp::doRequest(tars::TarsCurrentPtr current, vector<char> &response)
     }
 }
 
-int ProxyImp::wsRequest(tars::TarsCurrentPtr current, WSUser* ws, vector<char>& response)
+int ProxyImp::wsRequest(tars::TarsCurrentPtr current, WSUserPtr ws, vector<char>& response)
 {
     HandleParam stParam;
     string sErrMsg;
@@ -122,7 +122,6 @@ int ProxyImp::tarsRequest(tars::TarsCurrentPtr current, vector<char> &response)
         stParam.length = 0;
         stParam.iEptType = 0;
         stParam.iZipType = 0;
-        stParam.wsUser = nullptr;
 
         stParam.httpRequest.decode(&request[0], request.size());
 
@@ -154,7 +153,7 @@ int ProxyImp::tarsRequest(tars::TarsCurrentPtr current, vector<char> &response)
             makeHandshakeRsp(stParam.httpRequest, response);
             const string& buffer = response.encode();
             stParam.current->sendResponse(buffer.c_str(), buffer.length());
-            TLOGERROR("get a websocket" << endl);
+            TLOG_DEBUG("get a websocket" << endl);
             WSUserMgr::getInstance()->addUser(current, sRemoteIp);
             return 0;
         }

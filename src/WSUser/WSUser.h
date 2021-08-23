@@ -28,6 +28,8 @@ public:
     std::string m_real_ip;
 };
 
+typedef std::shared_ptr<WSUser> WSUserPtr;
+
 class WSUserMgr
 {
 public:
@@ -39,10 +41,10 @@ public:
     void addUser(tars::TarsCurrentPtr, const std::string& ip);
     void delUser(uint32_t connectId);
     bool isWS(uint32_t connectId);
-    WSUser* getUser(uint32_t connectId);
+    WSUserPtr getUser(uint32_t connectId);
 private:
     WSUserMgr(){}
-    std::map<uint32_t, WSUser> m_user;
+    std::map<uint32_t, WSUserPtr> m_user;
     std::mutex	m_userMutex;
 };
 

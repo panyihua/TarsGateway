@@ -44,7 +44,7 @@ class ProxyImp : public tars::Servant, public TupBase, public HttpBase
      */
     virtual int doRequest(tars::TarsCurrentPtr current, vector<char>& response);
 
-    int wsRequest(tars::TarsCurrentPtr current, WSUser* ws, vector<char>& response);
+    int wsRequest(tars::TarsCurrentPtr current, WSUserPtr ws, vector<char>& response);
     int tarsRequest(tars::TarsCurrentPtr current, vector<char>& response);
 
     virtual int doClose(CurrentPtr current);

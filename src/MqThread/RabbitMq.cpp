@@ -17,11 +17,11 @@ namespace MqName {
     namespace Exchange{
         namespace LoginServer {
             const string Name = "LoginServer";
-            const string KeySuccess = "Success";
+            const string KeySuccess = "LoginSuccess";
         }
         namespace GateWay{
             const string Name = "GateWayServer";
-            const string Key = "UidBindCid";
+            const string Key = "UidBindingCid";
         }
     }
 
@@ -68,7 +68,14 @@ bool RabbitMq::init(const std::string& configPath) {
 
 //todo 业务层调用，需要加锁
 void RabbitMq::publish(const std::string& routingKey, const std::string& body) {
-    m_channel->publish(m_exchange, routingKey, body);
+    auto b = false;
+    if(m_channel != nullptr){
+        b = m_channel->publish(m_exchange, routingKey, body);
+    }
+
+    if(!b){
+        TLOG_ERROR("publish error. " << routingKey << " body:" << body << " m_channel" << m_channel << endl);
+    }
 }
 
 
@@ -121,9 +128,15 @@ void RabbitMq::deploy()
     {
         TLOG_INFO( "declared queue " << name << std::endl);
     });
-    m_channel->declareExchange(Exchange::LoginServer::Name, (AMQP::ExchangeType)1, AMQP::durable);
+    m_channel->declareExchange(Exchange::LoginServer::Name, (AMQP::ExchangeType)1, AMQP::durable).onError(
+            [](const char *message){
+                TLOG_ERROR("declare Exchange error. " << message << Exchange::LoginServer::Name << endl);
+            });
 
-    m_channel->declareExchange(Exchange::GateWay::Name, (AMQP::ExchangeType)1, AMQP::durable);
+    m_channel->declareExchange(Exchange::GateWay::Name, (AMQP::ExchangeType)1, AMQP::durable).onError(
+            [](const char *message){
+                TLOG_ERROR("declare Exchange error. " << message << Exchange::GateWay::Name << endl);
+            });
 
     m_channel->bindQueue(Exchange::LoginServer::Name, Queue::GateWay::LoginSuccess, Exchange::LoginServer::KeySuccess)
     .onSuccess([]()
@@ -142,10 +155,11 @@ void RabbitMq::deploy()
                 TLOG_INFO("consume msg:" <<  message.routingkey() << " " << message.body() << endl);
 
                 loginMqTars::UserLoginMsg msg;
-                msg.readFromJsonString(message.body());
+                std::string body(message.body(), message.bodySize());
+                msg.readFromJsonString(body);
 
                 auto user = WSUserMgr::getInstance()->getUser(msg.cid);
-                if(user == nullptr) {
+                if(!user) {
                     TLOG_ERROR("consume login message msg error. " << msg << endl);
                 }
                 else {
@@ -153,7 +167,7 @@ void RabbitMq::deploy()
                         user->setUid(msg.uid);
                         TLOG_INFO("bind user ok.   " << msg << endl);
 
-                        this->publish(Exchange::GateWay::Key, message.body());
+                        this->publish(Exchange::GateWay::Key, body);
 
                     } else{
                         TLOG_INFO("bind user onther gate:   " << msg << endl);

@@ -408,7 +408,7 @@ int TupBase::handleTarsRequest(HandleParam &stParam)
         return -2;
     }
 
-    if(stParam.wsUser != nullptr || g_app.getAdminAuthObj().empty())
+    if(stParam.wsUser || g_app.getAdminAuthObj().empty())
     {
         return doTarsRequest(stParam, tupRequest);
     } else
@@ -445,7 +445,7 @@ int TupBase::doTarsRequest(HandleParam &stParam, RequestPacket& tupRequest)
     try
     {
         //ws鉴权
-        if(stParam.wsUser != nullptr)
+        if(stParam.wsUser)
         {
             if(stParam.wsUser->m_uid == 0)
             {
@@ -565,6 +565,11 @@ int TupBase::doTarsRequest(HandleParam &stParam, RequestPacket& tupRequest)
 
         //设置需要透传的头部
         tupRequest.context.insert(stParam.filterHeader.begin(), stParam.filterHeader.end());
+
+        if(stParam.wsUser){
+            tupRequest.context["uid"] = std::to_string(stParam.wsUser->m_uid);
+        }
+
         // 正常用户
         tupAsyncCall(tupRequest, proxy, cb, hi.type, sHttpHeaderValue);
 
