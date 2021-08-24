@@ -63,7 +63,7 @@ int ProxyImp::doRequest(tars::TarsCurrentPtr current, vector<char> &response)
     {
         if(ws->m_current->getUId() != current->getUId())
         {
-            TLOG_ERROR("do net reach.");
+            TLOG_ERROR("can't reach.");
             current->close();
             return 0;
         }
